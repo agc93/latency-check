@@ -24,8 +24,11 @@ namespace LatencyCheck.Service
         [ProducesResponseType(StatusCodes.Status412PreconditionFailed)]
         public ActionResult<Dictionary<ProcessIdentifier, List<TcpConnectionInfo>>> GetLatency() {
             var result = _cache.GetLatencySet();
+            if (result == null || !result.Any()) {
+                return StatusCode(412);
+            }
             var shortened = result.Select(r => r.ToDictionary(k => $"{k.Key.Name}:{k.Key.Id}", v => v.Value)).ToList();
-            return result == null ? StatusCode(412) : Ok(shortened);
+            return Ok(shortened);
         }
 
         [HttpGet("available")]

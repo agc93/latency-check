@@ -18,6 +18,9 @@ namespace LatencyCheck.Service
 
         public void ConfigureServices(IServiceCollection services) {
             services.AddControllers().AddJsonOptions(o => o.JsonSerializerOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowNamedFloatingPointLiterals);
+            services.AddHostFiltering(x => {
+                x.AllowedHosts = new List<string> { "localhost", "127.0.0.1", "[::1" };
+            });
             services.AddSingleton<ProcessConnectionClient>(p =>
                 ProcessConnectionClient.Create("LatencyCheck.Service.exe"));
             var section = Configuration.GetSection("Processes");

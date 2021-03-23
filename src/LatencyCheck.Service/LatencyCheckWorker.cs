@@ -28,19 +28,25 @@ namespace LatencyCheck.Service
             _updateHandlers = updateHandlers;
         }
 
-        public Task StartAsync(CancellationToken stoppingToken)
+        public async Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Timed Hosted Service running.");
+            _logger.LogInformation("Timed Worker Service running.");
+            await RefreshProcessesAsync();
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
                 TimeSpan.FromSeconds(4));
 
             _reloadTimer = new Timer(RefreshAsync, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
-
-            return Task.CompletedTask;
         }
 
         private async void RefreshAsync(object state) {
+            _logger.LogDebug(
+                "Refreshing tracked PIDs for {0} clients", _clients.Count());
+            await RefreshProcessesAsync();
+            
+        }
+
+        private async Task RefreshProcessesAsync() {
             foreach (var client in _clients)
             {
                 await client.RefreshPidsAsync();
@@ -64,15 +70,15 @@ namespace LatencyCheck.Service
 
             // _cache.Set(CacheKeys.LatencySet, latencySets);
 
-            _logger.LogInformation(
-                "Timed Hosted Service is working. Count: {0}", latencySets.Count);
+            _logger.LogDebug(
+                "Latency Check completed for {0} processes", latencySets.Count);
         }
 
         
 
         public Task StopAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Timed Hosted Service is stopping.");
+            _logger.LogInformation("Timed Worker Service is stopping.");
 
             _timer?.Change(Timeout.Infinite, 0);
             _reloadTimer?.Change(Timeout.Infinite, 0);
