@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using static LatencyCheck.Service.RunHelpers;
 
 namespace LatencyCheck.Service
 {
@@ -17,12 +18,14 @@ namespace LatencyCheck.Service
         private readonly IMemoryCache _cache;
         private Timer _timer;
         private Timer _reloadTimer;
-        
-        public LatencyCheckWorker(ILogger<LatencyCheckWorker> logger, IEnumerable<ProcessConnectionClient> clients, IMemoryCache cache)
+        private IEnumerable<IUpdateHandler> _updateHandlers;
+
+        public LatencyCheckWorker(ILogger<LatencyCheckWorker> logger, IEnumerable<ProcessConnectionClient> clients, IMemoryCache cache, IEnumerable<IUpdateHandler> updateHandlers)
         {
             _logger = logger;
             _clients = clients;
             _cache = cache;
+            _updateHandlers = updateHandlers;
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
@@ -44,15 +47,40 @@ namespace LatencyCheck.Service
             }
         }
 
-        private void DoWork(object state)
+        async void DoWork(object state)
         {
-            var latencySets = _clients.Select(c => c.GetOnce()).ToList();
-            _cache.SetLatencySet(new List<ProcessConnectionSet>(latencySets));
+            var latencySets = new List<ProcessConnectionSet>();
+            foreach (var client in _clients)
+            {
+                var result = client.GetOnce();
+                latencySets.Add(result);
+                foreach (var updateHandler in _updateHandlers)
+                {
+                    TryRun(async () => await updateHandler.HandleUpdateAsync(result));
+                    /*try
+                    {
+                        updateHandler.HandleUpdateAsync(result);
+                    }
+                    catch (NotImplementedException ex)
+                    {
+                        // ignored
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("Error encountered in bulk event handlers!");
+                    }*/
+                }
+            }
+            _cache.SetLatencySet(latencySets);
+            TryRun(() => Task.WaitAll(_updateHandlers.Select(uh => uh.HandleAllAsync(latencySets)).ToArray()));
+
             // _cache.Set(CacheKeys.LatencySet, latencySets);
 
             _logger.LogInformation(
                 "Timed Hosted Service is working. Count: {0}", latencySets.Count);
         }
+
+        
 
         public Task StopAsync(CancellationToken stoppingToken)
         {

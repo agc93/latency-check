@@ -18,6 +18,10 @@ namespace LatencyCheck.Service
             _sensorName = "LCS " + sensorName.Trim();
             _baseKey = Registry.CurrentUser.CreateSubKey(basePath);
             _keyPath = $"{basePath}\\{_sensorName}";
+            if (_baseKey.GetSubKeyNames().Contains(_sensorName))
+            {
+                _baseKey.DeleteSubKeyTree(_sensorName);
+            }
             _sensorKey = Registry.CurrentUser.CreateSubKey(_keyPath);
             var idx = 0;
             SetKey(ref idx, "Average", 0);
@@ -59,10 +63,16 @@ namespace LatencyCheck.Service
             index++;
         }
 
-        public void Dispose()
+        protected virtual void Dispose(bool disposing)
         {
             _baseKey.DeleteSubKeyTree(_sensorName);
             _sensorKey?.Dispose();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }

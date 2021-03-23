@@ -29,7 +29,7 @@ namespace LatencyCheck.Service
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddHostedService<LatencyCheckWorker>();
-                    services.AddHostedService<RegistryWorker>();
+                    // services.AddHostedService<RegistryWorker>();
                 });
     }
 }

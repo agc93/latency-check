@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 
 namespace LatencyCheck
@@ -11,6 +12,18 @@ namespace LatencyCheck
         public IEnumerator<KeyValuePair<ProcessIdentifier, IEnumerable<TcpConnectionInfo>>> GetEnumerator()
         {
             return _dictionaryImplementation.GetEnumerator();
+        }
+
+        public IEnumerable<string> GetProcessNames(bool removeExtension = true)
+        {
+            return _dictionaryImplementation.Keys.Select(s => s.Name)
+                .Select(n => removeExtension ? Path.GetFileNameWithoutExtension(n) : n);
+        }
+
+        public string GetProcessName(bool removeExtension = true)
+        {
+            var name = _dictionaryImplementation.Keys.FirstOrDefault()?.Name;
+            return name == null ? null : removeExtension ? Path.GetFileNameWithoutExtension(name) : name;
         }
 
         internal ProcessConnectionSet(IDictionary<ProcessIdentifier, IEnumerable<TcpConnectionInfo>> payload)
