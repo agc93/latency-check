@@ -57,18 +57,6 @@ namespace LatencyCheck.Service
                 foreach (var updateHandler in _updateHandlers)
                 {
                     TryRun(async () => await updateHandler.HandleUpdateAsync(result));
-                    /*try
-                    {
-                        updateHandler.HandleUpdateAsync(result);
-                    }
-                    catch (NotImplementedException ex)
-                    {
-                        // ignored
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning("Error encountered in bulk event handlers!");
-                    }*/
                 }
             }
             _cache.SetLatencySet(latencySets);

@@ -19,7 +19,9 @@ namespace LatencyCheck.Service
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .UseWindowsService()
+                .UseWindowsService(x => {
+                    x.ServiceName = "LatencyCheck";
+                })
                 .ConfigureWebHostDefaults(web => {
                     web.UseStartup<Startup>();
                 })

@@ -131,9 +131,11 @@ Task("Publish-Runtime")
 				OutputDirectory = runtimeDir,
 				PublishSingleFile = true,
 				PublishTrimmed = true,
-				ArgumentCustomization = args => args.Append($"/p:Version={packageVersion}").Append("/p:IncludeNativeLibrariesInSingleFile=true")
+				ArgumentCustomization = args => args.Append($"/p:Version={packageVersion}")
+				// ArgumentCustomization = args => args.Append($"/p:Version={packageVersion}").Append("/p:IncludeNativeLibrariesInSingleFile=true")
 			};
 			DotNetCorePublish(projPath, settings);
+			CopyFiles(GetFiles("./build/*.ps1"), runtimeDir);
 			CreateDirectory($"{artifacts}archive");
 			Zip(runtimeDir, $"{artifacts}archive/lcs-{runtime}.zip");
 		}
