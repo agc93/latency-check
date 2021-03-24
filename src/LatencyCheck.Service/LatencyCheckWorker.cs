@@ -28,32 +28,34 @@ namespace LatencyCheck.Service
             _updateHandlers = updateHandlers;
         }
 
-        public async Task StartAsync(CancellationToken stoppingToken)
+        public Task StartAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation("Timed Worker Service running.");
-            await RefreshProcessesAsync();
+            RefreshProcesses();
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
                 TimeSpan.FromSeconds(4));
 
-            _reloadTimer = new Timer(RefreshAsync, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
+            _reloadTimer = new Timer(Refresh, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
+
+            return Task.CompletedTask;
         }
 
-        private async void RefreshAsync(object state) {
+        private void Refresh(object state) {
             _logger.LogDebug(
                 "Refreshing tracked PIDs for {0} clients", _clients.Count());
-            await RefreshProcessesAsync();
+            RefreshProcesses();
             
         }
 
-        private async Task RefreshProcessesAsync() {
+        private void RefreshProcesses() {
             foreach (var client in _clients)
             {
-                await client.RefreshPidsAsync();
+                client.RefreshPids();
             }
         }
 
-        async void DoWork(object state)
+        private void DoWork(object state)
         {
             var latencySets = new List<ProcessConnectionSet>();
             foreach (var client in _clients)
@@ -62,7 +64,7 @@ namespace LatencyCheck.Service
                 latencySets.Add(result);
                 foreach (var updateHandler in _updateHandlers)
                 {
-                    TryRun(async () => await updateHandler.HandleUpdateAsync(result));
+                    TryRun(async () => await updateHandler.HandleUpdateAsync(result), (ex) => _logger.LogError(ex, "Error in event handler!"));
                 }
             }
             _cache.SetLatencySet(latencySets);

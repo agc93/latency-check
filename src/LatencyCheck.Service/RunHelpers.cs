@@ -5,19 +5,19 @@ namespace LatencyCheck.Service
 {
     public static class RunHelpers
     {
-        public static void TryRun(Action actionFn, Action errFn = null)
+        public static void TryRun(Action actionFn, Action<Exception> errFn = null)
         {
             try
             {
                 actionFn();
             }
-            catch (NotImplementedException ex)
+            catch (NotImplementedException)
             {
                 // ignored
             }
             catch (Exception ex)
             {
-                errFn?.Invoke();
+                errFn?.Invoke(ex);
             }
         }
         

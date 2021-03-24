@@ -10,8 +10,7 @@ namespace LatencyCheck.Service
     {
         public static void SetLatencySet(this IMemoryCache cache, List<ProcessConnectionSet> connections) {
             var entry = new MemoryCacheEntryOptions {
-                SlidingExpiration = TimeSpan.FromSeconds(2),
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(5)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(15)
             };
             cache.Set(CacheKeys.LatencySet, connections, entry);
         }

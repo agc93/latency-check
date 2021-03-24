@@ -15,7 +15,7 @@ namespace LatencyCheck.Service
             _logger = logger;
             _clients = clients;
             _cache = cache;
-            RefreshCallback = RefreshAsync;
+            RefreshCallback = Refresh;
         }
         private Timer _timer;
         private Timer _reloadTimer;
@@ -58,10 +58,10 @@ namespace LatencyCheck.Service
             return Task.CompletedTask;
         }
 
-        private async void RefreshAsync(object state) {
+        private void Refresh(object state) {
             foreach (var client in _clients)
             {
-                await client.RefreshPidsAsync();
+                client.RefreshPids();
             }
         }
     }

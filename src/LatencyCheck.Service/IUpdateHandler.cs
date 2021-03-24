@@ -43,7 +43,7 @@ namespace LatencyCheck.Service
 
         // private List<(ProcessConnectionClient Client, RegistrySensor Sensor)> Clients { get; }
 
-        public async Task HandleUpdateAsync(ProcessConnectionSet payload)
+        public Task HandleUpdateAsync(ProcessConnectionSet payload)
         {
             if (payload != null && Sensors.Any())
             {
@@ -52,6 +52,7 @@ namespace LatencyCheck.Service
                     sensor.SetSensorValue(payload);
                 }
             }
+            return Task.CompletedTask;
         }
 
         /*private (ProcessConnectionClient Client, RegistrySensor Sensor)? MatchClient(ProcessConnectionSet ls)

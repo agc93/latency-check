@@ -9,14 +9,13 @@ $mycreds = New-Object System.Management.Automation.PSCredential ($NetworkService
 $params = @{
     Name = "LatencyCheck"
     BinaryPathName = "`"$binPath`""
-    DependsOn = "NetLogon"
     DisplayName = "LatencyCheck"
     StartupType = "Automatic"
     Description = "Background worker for LatencyCheck process monitoring."
-    Credentials = $mycreds
+    Credential = $mycreds
   }
 Write-Output $params
-New-Service $params
+New-Service @params
 
 $configPath = Join-Path $env:APPDATA "LatencyCheck"
 $configFilePath = Join-Path $configPath "checks.json"

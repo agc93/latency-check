@@ -39,8 +39,10 @@ namespace LatencyCheck
             _timer = timer;
         }
 
-        public async Task<ProcessConnectionClient> RefreshPidsAsync() {
-            Initialise();
+        public ProcessConnectionClient RefreshPids()
+        {
+            var matchingProcesses = Process.GetProcessesByName(System.IO.Path.GetFileNameWithoutExtension(_executableName));
+            _processes = _filter(matchingProcesses).ToList();
             return this;
         }
 
