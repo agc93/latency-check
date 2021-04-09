@@ -25,11 +25,14 @@ namespace LatencyCheck.Service.Counters
 
         public async Task HandleUpdateAsync(ProcessConnectionSet payload)
         {
-            return;
+            if (payload.Values.Any(v => v.Any()) 
+                && payload.Keys.Any(k => _processNames.ContainsProcess(k, true))) {
+                _category.Update(payload);
+            }
         }
 
-        public Task HandleAllAsync(List<ProcessConnectionSet> payload)
-        {
+        public Task HandleAllAsync(List<ProcessConnectionSet> payload) {
+            return Task.CompletedTask;
             try {
                 _category.TryCreateIfNotExists().Update(payload);
             }

@@ -79,7 +79,7 @@ namespace LatencyCheck.Service.Counters
         }
 
         public void Update(IEnumerable<ProcessConnectionSet> payload) {
-            Logger?.LogDebug("Updating performance counters for payload.");
+            Logger?.LogTrace("Updating performance counters for payload.");
             var enabledPayload = payload
                 .Where(cs => cs.Values.Any(v => v.Any()))
                 .Where(set => set.Keys.Any(k => _processNames.ContainsProcess(k, true)));
