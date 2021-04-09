@@ -68,7 +68,7 @@ namespace LatencyCheck.Service
                 }
             }
             _cache.SetLatencySet(latencySets);
-            TryRun(() => Task.WaitAll(_updateHandlers.Select(uh => uh.HandleAllAsync(latencySets)).ToArray()));
+            TryRun(() => Task.WaitAll(_updateHandlers.Select(uh => uh.HandleAllAsync(latencySets)).ToArray()), (ex) => _logger.LogError(ex, "Error in event handler!"));
 
             // _cache.Set(CacheKeys.LatencySet, latencySets);
 

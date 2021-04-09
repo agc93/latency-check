@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Extensions.Configuration;
 
 namespace LatencyCheck.Service
 {
@@ -10,6 +13,13 @@ namespace LatencyCheck.Service
 
         public static int ToInt(this float value) {
             return Convert.ToInt32(value);
+        }
+
+        public static ProcessSet GetProcessesForSource(this ProcessSet allProcesses, IConfiguration config, string name) {
+            var section = config.GetSection(name);
+            return (section.Exists() && section.Get<List<string>>() is var processNames && processNames.Any())
+                ? new ProcessSet(processNames)
+                : allProcesses;
         }
     }
 }

@@ -1,9 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Win32;
 
-namespace LatencyCheck.Service
+namespace LatencyCheck.Service.Registry
 {
     public class RegistrySensor : IDisposable
     {
@@ -16,13 +15,13 @@ namespace LatencyCheck.Service
         public RegistrySensor(string sensorName)
         {
             _sensorName = "LCS " + sensorName.Trim();
-            _baseKey = Registry.CurrentUser.CreateSubKey(basePath);
+            _baseKey = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(basePath);
             _keyPath = $"{basePath}\\{_sensorName}";
             if (_baseKey.GetSubKeyNames().Contains(_sensorName))
             {
                 _baseKey.DeleteSubKeyTree(_sensorName);
             }
-            _sensorKey = Registry.CurrentUser.CreateSubKey(_keyPath);
+            _sensorKey = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(_keyPath);
             var idx = 0;
             SetKey(ref idx, "Average", 0);
             SetKey(ref idx, "Maximum", 0);
@@ -38,7 +37,7 @@ namespace LatencyCheck.Service
         public void SetSensorValue(ProcessConnectionSet payload)
         {
             var allConnections = payload.SelectMany(p => p.Value).ToList();
-            var avg = allConnections.Average(c => c.Smoothed);
+            var avg = allConnections.Average(c => c.RTT);
             var max = allConnections.Max(c => c.Max).ToInt();
             var idx = 0;
             SetKey(ref idx, "Average", Convert.ToInt32(avg));

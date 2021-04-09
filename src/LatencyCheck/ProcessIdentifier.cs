@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace LatencyCheck
 {
@@ -31,6 +33,26 @@ namespace LatencyCheck
             {
                 return (obj.Id ?? 1369) ^ obj.Name.GetHashCode();
             }
+        }
+    }
+
+    [Obsolete("Currently unstable")]
+    public class ProcessFamily
+    {
+        public ProcessFamily(string processName)
+        {
+            ExecutableName = processName;
+        }
+        public string ExecutableName { get; set; }
+
+        public IEnumerable<ProcessIdentifier> Processes =>
+            _processes.Select(p => new ProcessIdentifier {Name = p.ProcessName, Id = p.Id});
+
+        private List<System.Diagnostics.Process> _processes { get; set; } = new List<Process>();
+
+        public IEnumerable<System.Diagnostics.Process> GetRawProcesses()
+        {
+            return _processes;
         }
     }
 }

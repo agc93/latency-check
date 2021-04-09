@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using LatencyCheck.Service.Counters;
+using LatencyCheck.Service.Registry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -30,18 +32,18 @@ namespace LatencyCheck.Service
                 services.AddSingleton<ProcessConnectionClient>(p => ProcessConnectionClient.Create(check));
             }
 
+            services.AddSingleton<ProcessSet>(p => new ProcessSet(p.GetServices<ProcessConnectionClient>()));
+
             services.AddSingleton<IUpdateHandler, RegistryUpdateHandler>();
+            services.AddSingleton<IUpdateHandler, PerformanceCounterHandler>();
             services.AddMemoryCache();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
+            if (env.IsDevelopment()) {
                 app.UseDeveloperExceptionPage();
-            }
-            else
-            {
+            } else {
                 app.UseExceptionHandler("/Error");
                 app.UseForwardedHeaders();
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.

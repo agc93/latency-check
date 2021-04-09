@@ -1,14 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace LatencyCheck.Service
+namespace LatencyCheck.Service.Registry
 {
     public class RegistryWorker: ClientWorker
     {
@@ -16,7 +12,7 @@ namespace LatencyCheck.Service
         {
             WorkCallback = DoWork;
             RefreshCallback = RefreshAsync;
-            Clients = clients.Select(c => (c, new RegistrySensor(Path.GetFileNameWithoutExtension(c.ExecutableName)))).ToList();
+            Clients = clients.Select(c => (c, new RegistrySensor(Path.GetFileNameWithoutExtension((string?) c.ExecutableName)))).ToList();
         }
         
         private List<(ProcessConnectionClient Client, RegistrySensor Sensor)> Clients { get; }

@@ -29,6 +29,7 @@ namespace LatencyCheck
         public string Name => process?.ProcessName;
         // public string Path => ownerInfo.pModulePath;
         public int? ProcessId => process?.Id;
+        public uint? LocalPort => ownerRow.dwLocalPort;
 
         public MIB_TCPROW GetTcpRow() => tcpRow;
         public void SetStats(TCP_ESTATS_PATH_ROD_v0 stats)
