@@ -11,12 +11,12 @@ namespace LatencyCheck.Service
     public class ConnectionsController : ControllerBase
     {
         private readonly IMemoryCache _cache;
-        private readonly IEnumerable<ProcessConnectionClient> _clients;
+        private ProcessSet _processes;
 
-        public ConnectionsController(IMemoryCache cache, IEnumerable<ProcessConnectionClient> clients)
+        public ConnectionsController(IMemoryCache cache, ProcessSet processes)
         {
             _cache = cache;
-            _clients = clients;
+            _processes = processes;
         }
 
         [HttpGet("current")]
@@ -32,8 +32,8 @@ namespace LatencyCheck.Service
         }
 
         [HttpGet("available")]
-        public ActionResult<List<List<string>>> GetAvailable() {
-            var result = _clients.Select(c => c.Processes.Select(p =>p.ToString()).ToList()).ToList();
+        public ActionResult<List<string>> GetAvailable() {
+            var result = _processes.Select(c => c.Name).ToList();
             return result;
         }
     }

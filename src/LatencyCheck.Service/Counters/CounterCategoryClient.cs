@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.Extensions.Logging;
 
 namespace LatencyCheck.Service.Counters
 {
@@ -14,6 +15,8 @@ namespace LatencyCheck.Service.Counters
         public string CategoryName { get; init; } = "LatencyCheck";
         public string CategoryHelp { get; init; } = "LatencyCheck-powered process latency counters.";
         public PerformanceCounterCategoryType Type { get; init; } = PerformanceCounterCategoryType.MultiInstance;
+        
+        public ILogger Logger { get; init; }
 
         private PerformanceCounter GetCounter(string counterName, string instanceName) {
             var counter = new PerformanceCounter(CategoryName, GetCounterName(counterName), instanceName)
@@ -25,9 +28,22 @@ namespace LatencyCheck.Service.Counters
 
         public CounterCategoryClient CreateIfNotExists() {
             if (!PerformanceCounterCategory.Exists(CategoryName)) {
+                Logger?.LogInformation("Performance Counter Category not found. Creating!");
                 var customCat = new PerformanceCounterCategory(CategoryName);
                 var creationData = new CounterCreationDataCollection(GetCreationData().ToArray());
                 PerformanceCounterCategory.Create(customCat.CategoryName, CategoryHelp, Type, creationData);
+            }
+
+            return this;
+        }
+
+        public CounterCategoryClient TryCreateIfNotExists() {
+            try {
+                CreateIfNotExists();
+            }
+            catch (Exception e) {
+                Logger?.LogError(e, "Error while creating custom counter category.");
+                //ignored
             }
 
             return this;
@@ -63,34 +79,41 @@ namespace LatencyCheck.Service.Counters
         }
 
         public void Update(IEnumerable<ProcessConnectionSet> payload) {
+            Logger?.LogDebug("Updating performance counters for payload.");
             var enabledPayload = payload
                 .Where(cs => cs.Values.Any(v => v.Any()))
-                .Where(set => set.Keys.Any(k => _processNames.ContainsProcess(k)));
+                .Where(set => set.Keys.Any(k => _processNames.ContainsProcess(k, true)));
             foreach (var connectionSet in enabledPayload) {
-                var allConnections = connectionSet.SelectMany(p => p.Value).ToList();
-                var avg = allConnections.Average(c => c.RTT);
-                var max = allConnections.Max(c => c.Max).ToInt();
-                var avgCounter = GetCounter("Average", connectionSet.GetProcessName());
-                avgCounter.RawValue = Convert.ToInt64(avg);
-                var maxCounter = GetCounter("Maximum", connectionSet.GetProcessName());
-                maxCounter.RawValue = Convert.ToInt64(max);
-                var current = GetInstances(connectionSet, c => c.RTT);
-                foreach (var (instanceName, value) in current) {
-                    var c = GetCounter("Current", instanceName);
-                    c.RawValue = value;
-                }
+                Update(connectionSet);
+            }
+        }
 
-                var average = GetInstances(connectionSet, c => c.Smoothed);
-                foreach (var (instanceName, value) in average) {
-                    var c = GetCounter("Average", instanceName);
-                    c.RawValue = value;
-                }
+        public void Update(ProcessConnectionSet connectionSet) {
+            Logger?.LogTrace($"Updating sensors for {connectionSet.GetProcessName()}");
+            var allConnections = connectionSet.SelectMany(p => p.Value).ToList();
+            var avg = allConnections.Average(c => c.Smoothed);
+            var max = allConnections.Max(c => c.Max).ToInt64();
+            var avgCounter = GetCounter("Average", connectionSet.GetProcessName());
+            avgCounter.RawValue = Convert.ToInt64(avg);
+            var maxCounter = GetCounter("Maximum", connectionSet.GetProcessName());
+            maxCounter.RawValue = Convert.ToInt64(max);
+            var current = GetInstances(connectionSet, c => c.Smoothed);
+            foreach (var (instanceName, value) in current) {
+                Logger?.LogTrace($"Updating current values for {instanceName}");
+                var c = GetCounter("Current", instanceName);
+                c.RawValue = value;
+            }
 
-                var maximums = GetInstances(connectionSet, c => c.Max);
-                foreach (var (instanceName, value) in maximums) {
-                    var c = GetCounter("Maximum", instanceName);
-                    c.RawValue = value;
-                }
+            var average = GetInstances(connectionSet, c => c.Mean);
+            foreach (var (instanceName, value) in average) {
+                var c = GetCounter("Average", instanceName);
+                c.RawValue = value;
+            }
+
+            var maximums = GetInstances(connectionSet, c => c.Max);
+            foreach (var (instanceName, value) in maximums) {
+                var c = GetCounter("Maximum", instanceName);
+                c.RawValue = value;
             }
         }
 

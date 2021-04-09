@@ -12,7 +12,7 @@ $params = @{
     DisplayName = "LatencyCheck"
     StartupType = "Automatic"
     Description = "Background worker for LatencyCheck process monitoring."
-    Credential = $mycreds
+#    Credential = $mycreds
   }
 Write-Output $params
 New-Service @params

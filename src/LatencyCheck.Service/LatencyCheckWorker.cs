@@ -58,13 +58,16 @@ namespace LatencyCheck.Service
             var latencySets = new List<ProcessConnectionSet>();
             foreach (var client in _clients)
             {
+                _logger.LogTrace($"Checking latency for {client?.ExecutableName}");
                 var result = client.GetOnce();
                 latencySets.Add(result);
                 foreach (var updateHandler in _updateHandlers)
                 {
+                    _logger.LogTrace($"Running event handlers for {updateHandler.GetType().ToString()}");
                     TryRun(async () => await updateHandler.HandleUpdateAsync(result), (ex) => _logger.LogError(ex, "Error in event handler!"));
                 }
             }
+            _logger.LogTrace($"Running {_updateHandlers.Count()} bulk update handlers.");
             TryRun(() => Task.WaitAll(_updateHandlers.Select(uh => uh.HandleAllAsync(latencySets)).ToArray()), (ex) => _logger.LogError(ex, "Error in event handler!"));
 
             _logger.LogDebug(

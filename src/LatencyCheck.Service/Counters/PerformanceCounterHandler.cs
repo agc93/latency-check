@@ -17,8 +17,9 @@ namespace LatencyCheck.Service.Counters
         public PerformanceCounterHandler(ProcessSet set, IConfiguration config, ILogger<PerformanceCounterHandler> logger) {
             var result = set.GetProcessesForSource(config, "PerformanceCounters");
             _processNames = result;
+            logger.LogDebug($"Setting up perf counters for {_processNames.Count} processes.");
             _logger = logger;
-            _category = new CounterCategoryClient(result);
+            _category = new CounterCategoryClient(result) {Logger = logger};
             _category.CreateIfNotExists();
         }
 
@@ -29,7 +30,13 @@ namespace LatencyCheck.Service.Counters
 
         public Task HandleAllAsync(List<ProcessConnectionSet> payload)
         {
-            _category.CreateIfNotExists().Update(payload);
+            try {
+                _category.TryCreateIfNotExists().Update(payload);
+            }
+            catch (Exception e) {
+                _logger.LogError(e, "Error encountered while updating performance counters!");
+                throw;
+            }
             return Task.CompletedTask;
         }
     }

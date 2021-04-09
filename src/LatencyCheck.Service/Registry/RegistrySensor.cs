@@ -27,20 +27,13 @@ namespace LatencyCheck.Service.Registry
             SetKey(ref idx, "Maximum", 0);
         }
 
-        private void SetSensorValue(int index, TcpConnectionInfo info) {
-            SetKey(ref index, "Min", info.Min.ToInt());
-            SetKey(ref index, "Max", info.Max.ToInt());
-            SetKey(ref index, "Avg", info.Avg.ToInt());
-            SetKey(ref index, "Smoothed", info.Smoothed.ToInt());
-        }
-
         public void SetSensorValue(ProcessConnectionSet payload)
         {
             var allConnections = payload.SelectMany(p => p.Value).ToList();
-            var avg = allConnections.Average(c => c.RTT);
-            var max = allConnections.Max(c => c.Max).ToInt();
+            var avg = allConnections.Average(c => c.Smoothed);
+            var max = allConnections.Max(c => c.Max).ToInt64();
             var idx = 0;
-            SetKey(ref idx, "Average", Convert.ToInt32(avg));
+            SetKey(ref idx, "Average", Convert.ToInt64(avg));
             SetKey(ref idx, "Maximum", max);
             foreach (var (process, connections) in payload)
             {
@@ -48,17 +41,17 @@ namespace LatencyCheck.Service.Registry
                 for (var i = 0; i < connectionList.Count; i++)
                 {
                     var processConnection = connectionList[i];
-                    SetKey(ref idx, $"Process {i} Latency", processConnection.Smoothed.ToInt());
+                    SetKey(ref idx, $"Process {i} Latency", processConnection.Smoothed.ToInt64());
                 }
             }
             //TODO: remove keys past the current 'i' for a specific sensor
             
         }
 
-        private void SetKey(ref int index, string name, int value, string unit = "ms") {
+        private void SetKey(ref int index, string name, long value, string unit = "ms") {
             var counterKey = _sensorKey.CreateSubKey($"Other{index}");
             counterKey.SetValue("Name", name, RegistryValueKind.String);
-            counterKey.SetValue("Value", value, RegistryValueKind.DWord);
+            counterKey.SetValue("Value", value, RegistryValueKind.QWord);
             counterKey.SetValue("Unit", unit, RegistryValueKind.String);
             index++;
         }

@@ -15,6 +15,13 @@ namespace LatencyCheck.Service
             return Convert.ToInt32(value);
         }
 
+        public static long ToInt64(this uint value) {
+            return Convert.ToInt64(value);
+        } 
+        public static long ToInt64(this float value) {
+            return Convert.ToInt64(value);
+        } 
+
         public static ProcessSet GetProcessesForSource(this ProcessSet allProcesses, IConfiguration config, string name) {
             var section = config.GetSection(name);
             return (section.Exists() && section.Get<List<string>>() is var processNames && processNames.Any())

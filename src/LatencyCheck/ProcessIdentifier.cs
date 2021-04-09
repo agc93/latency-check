@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 
 namespace LatencyCheck
@@ -15,6 +16,10 @@ namespace LatencyCheck
             return Name == other.Name
                 ? (Id ?? 0).CompareTo(other.Id ?? 0)
                 : Name.CompareTo(other.Name);
+        }
+
+        public string GetName() {
+            return Path.GetFileNameWithoutExtension(Name);
         }
 
         public override string ToString()
