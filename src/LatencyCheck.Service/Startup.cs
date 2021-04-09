@@ -36,6 +36,7 @@ namespace LatencyCheck.Service
 
             services.AddSingleton<IUpdateHandler, RegistryUpdateHandler>();
             services.AddSingleton<IUpdateHandler, PerformanceCounterHandler>();
+            services.AddSingleton<IUpdateHandler, CacheUpdateHandler>();
             services.AddMemoryCache();
         }
 

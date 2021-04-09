@@ -15,7 +15,6 @@ namespace LatencyCheck.Service
         private int executionCount = 0;
         private readonly ILogger<LatencyCheckWorker> _logger;
         private readonly IEnumerable<ProcessConnectionClient> _clients;
-        private readonly IMemoryCache _cache;
         private Timer _timer;
         private Timer _reloadTimer;
         private IEnumerable<IUpdateHandler> _updateHandlers;
@@ -24,7 +23,6 @@ namespace LatencyCheck.Service
         {
             _logger = logger;
             _clients = clients;
-            _cache = cache;
             _updateHandlers = updateHandlers;
         }
 
@@ -67,10 +65,7 @@ namespace LatencyCheck.Service
                     TryRun(async () => await updateHandler.HandleUpdateAsync(result), (ex) => _logger.LogError(ex, "Error in event handler!"));
                 }
             }
-            _cache.SetLatencySet(latencySets);
             TryRun(() => Task.WaitAll(_updateHandlers.Select(uh => uh.HandleAllAsync(latencySets)).ToArray()), (ex) => _logger.LogError(ex, "Error in event handler!"));
-
-            // _cache.Set(CacheKeys.LatencySet, latencySets);
 
             _logger.LogDebug(
                 "Latency Check completed for {0} processes", latencySets.Count);

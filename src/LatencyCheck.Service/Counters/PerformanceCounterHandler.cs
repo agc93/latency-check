@@ -22,8 +22,6 @@ namespace LatencyCheck.Service.Counters
             _category.CreateIfNotExists();
         }
 
-        public List<PerformanceCounterClient> Clients { get; private set; } = new List<PerformanceCounterClient>();
-
         public async Task HandleUpdateAsync(ProcessConnectionSet payload)
         {
             return;
