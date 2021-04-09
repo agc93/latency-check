@@ -32,6 +32,8 @@ namespace LatencyCheck.Service
                 services.AddSingleton<ProcessConnectionClient>(p => ProcessConnectionClient.Create(check));
             }
 
+            services.Configure<WorkerOptions>(Configuration.GetSection("WorkerOptions"));
+
             services.AddSingleton<ProcessSet>(p => new ProcessSet(p.GetServices<ProcessConnectionClient>()));
 
             services.AddSingleton<IUpdateHandler, RegistryUpdateHandler>();

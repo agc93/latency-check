@@ -6,24 +6,26 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using static LatencyCheck.Service.RunHelpers;
 
 namespace LatencyCheck.Service
 {
     public class LatencyCheckWorker : IHostedService, IDisposable
     {
-        private int executionCount = 0;
         private readonly ILogger<LatencyCheckWorker> _logger;
         private readonly IEnumerable<ProcessConnectionClient> _clients;
         private Timer _timer;
         private Timer _reloadTimer;
         private IEnumerable<IUpdateHandler> _updateHandlers;
+        private WorkerOptions _opts;
 
-        public LatencyCheckWorker(ILogger<LatencyCheckWorker> logger, IEnumerable<ProcessConnectionClient> clients, IMemoryCache cache, IEnumerable<IUpdateHandler> updateHandlers)
+        public LatencyCheckWorker(ILogger<LatencyCheckWorker> logger, IEnumerable<ProcessConnectionClient> clients, IMemoryCache cache, IEnumerable<IUpdateHandler> updateHandlers, IOptions<WorkerOptions> workerOpts)
         {
             _logger = logger;
             _clients = clients;
             _updateHandlers = updateHandlers;
+            _opts = workerOpts?.Value ?? new WorkerOptions();
         }
 
         public Task StartAsync(CancellationToken stoppingToken)
@@ -32,9 +34,9 @@ namespace LatencyCheck.Service
             RefreshProcesses();
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero, 
-                TimeSpan.FromSeconds(4));
+                TimeSpan.FromSeconds(_opts.Interval));
 
-            _reloadTimer = new Timer(Refresh, null, TimeSpan.Zero, TimeSpan.FromSeconds(10));
+            _reloadTimer = new Timer(Refresh, null, TimeSpan.Zero, TimeSpan.FromSeconds(_opts.ReloadInterval));
 
             return Task.CompletedTask;
         }
