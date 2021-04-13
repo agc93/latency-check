@@ -20,7 +20,15 @@ namespace LatencyCheck
 
         public uint RTT => stats.SampleRtt;
         public uint Smoothed => stats.SmoothedRtt;
-        public uint Mean => stats.SumRtt / stats.CountRtt;
+        private uint _mean;
+        public uint Mean
+        {
+            get
+            {
+                _mean = (stats.CountRtt > 0 && stats.SumRtt > 0) ? stats.SumRtt / stats.CountRtt : _mean;
+                return _mean;
+            }
+        }
         public uint Min => stats.MinRtt;
         public uint Max => stats.MaxRtt;
         public uint Errors => stats.Timeouts;
