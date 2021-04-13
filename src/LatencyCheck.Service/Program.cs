@@ -26,7 +26,10 @@ namespace LatencyCheck.Service
                     web.UseStartup<Startup>();
                     web.UseUrls("http://localhost:5064");
                 })
-                .ConfigureAppConfiguration(config => {
+                .ConfigureAppConfiguration(config =>
+                {
+                    config.AddJsonFile("checks.json", true, true);
+                    config.AddJsonFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "LatencyCheck", "checks.json"), true, true);
                     config.AddJsonFile(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LatencyCheck", "checks.json"), true, true);
                 })
                 .ConfigureServices((hostContext, services) =>
